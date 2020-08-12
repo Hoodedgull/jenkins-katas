@@ -57,13 +57,15 @@ pipeline {
 
         stage('Component Test') {
           when {
-            not {
-              branch 'dev/*'
-            }
-          }
+  anyOf {
+    branch 'master'
+    changeRequest author: '', authorDisplayName: '', authorEmail: '', branch: '', fork: '', id: '', target: '', title: '', url: ''
+  }
+}
+
 
           options {
-        skipDefaultCheckout true
+            skipDefaultCheckout true
           }
 
           steps {
@@ -74,9 +76,9 @@ pipeline {
 
     stage('Push docker app') {
         when { branch 'master' }
-      environment {
-        DOCKERCREDS = credentials('docker_login') //use the credentials just created in this stage
-      }
+          environment {
+            DOCKERCREDS = credentials('docker_login') //use the credentials just created in this stage
+          }
       steps {
         unstash 'jarfile' //unstash the repository code
         sh 'ci/build-docker.sh'
@@ -87,7 +89,7 @@ pipeline {
   }
   post {
         always {
-      deleteDir() /* clean up our workspace */
+         deleteDir() /* clean up our workspace */
         }
   }
 }
