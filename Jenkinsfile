@@ -1,16 +1,14 @@
 pipeline {
   agent any
   environment {
-  docker_username = "hoodedgull"
-    }
+    docker_username = 'hoodedgull'
+  }
 
   stages {
-    stage('Clone down'){
+    stage('Clone down') {
         agent any
-        steps{
-            
+        steps {
             stash excludes: '.git/', name: 'code'
-            
         }
     }
     stage('Parallel Exec') {
@@ -26,7 +24,6 @@ pipeline {
             docker {
               image 'gradle:jdk11'
             }
-
           }
           options {
               skipDefaultCheckout true
@@ -44,7 +41,6 @@ pipeline {
             docker {
               image 'gradle:jdk11'
             }
-
           }
           options {
               skipDefaultCheckout true
@@ -56,19 +52,18 @@ pipeline {
             junit 'app/build/test-results/test/TEST-*.xml'
           }
         }
-
       }
     }
-    
+
         stage('Component Test') {
           when {
-  not {
-    branch 'dev/*'
-  }
-}
-          
+            not {
+              branch 'dev/*'
+            }
+          }
+
           options {
-              skipDefaultCheckout true
+        skipDefaultCheckout true
           }
 
           steps {
@@ -77,28 +72,22 @@ pipeline {
           }
         }
 
-    
-    
-    
-    
-    stage('Push docker app'){
-        when {branch "master"}
-    environment {
-      DOCKERCREDS = credentials('docker_login') //use the credentials just created in this stage
+    stage('Push docker app') {
+        when { branch 'master' }
+      environment {
+        DOCKERCREDS = credentials('docker_login') //use the credentials just created in this stage
+      }
+      steps {
+        unstash 'jarfile' //unstash the repository code
+        sh 'ci/build-docker.sh'
+        sh 'echo "$DOCKERCREDS_PSW" | docker login -u "$DOCKERCREDS_USR" --password-stdin' //login to docker hub with the credentials above
+        sh 'ci/push-docker.sh'
+      }
     }
-    steps {
-      unstash 'jarfile' //unstash the repository code
-      sh 'ci/build-docker.sh'
-      sh 'echo "$DOCKERCREDS_PSW" | docker login -u "$DOCKERCREDS_USR" --password-stdin' //login to docker hub with the credentials above
-      sh 'ci/push-docker.sh'
-    }
-    }
-
   }
-   post {
+  post {
         always {
-
-            deleteDir() /* clean up our workspace */
+      deleteDir() /* clean up our workspace */
         }
-   }
+  }
 }
