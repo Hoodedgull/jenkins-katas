@@ -57,10 +57,12 @@ pipeline {
 
         stage('Component Test') {
           when {
-            not {
-              branch 'dev/*'
-            }
-          }
+  anyOf {
+    branch 'master'
+    changeRequest author: '', authorDisplayName: '', authorEmail: '', branch: '', fork: '', id: '', target: '', title: '', url: ''
+  }
+}
+
 
           options {
             skipDefaultCheckout true
